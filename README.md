@@ -1,10 +1,69 @@
 # iStore Gateway
 
-Architecture exercise "Checkout KMP + BFF" (see the corresponding page
-in Notion): API Gateway + Checkout backend. Gateway is **KrakenD**
-(declarative config, no custom code); `bff-checkout` and `payment-api`
-are **Spring Boot (Kotlin)**, Phase 2 of the roadmap — synchronous
-backend, no queue/worker/Postgres yet.
+Architecture exercise "Checkout KMP + BFF": API Gateway + Checkout
+backend. Gateway is **KrakenD** (declarative config, no custom code);
+`bff-checkout` and `payment-api` are **Spring Boot (Kotlin)**, Phase 2
+of the roadmap — synchronous backend, no queue/worker/Postgres yet.
+
+## Architecture
+
+### Current state (implemented)
+
+Gateway + `bff-checkout` + `payment-api`, all synchronous, in-memory
+storage, no queue yet. `bff-conta` and `bff-catalogo` don't exist —
+`mock-backend` (httpbin) stands in for them.
+
+```mermaid
+flowchart LR
+    Client["Client<br>(curl/Postman for now,<br>KMP app later)"] --> GW["API Gateway<br>(KrakenD)<br>routing, JWT auth,<br>rate limit, CORS, logging"]
+
+    GW -->|"/checkout/*"| BFF["bff-checkout<br>(Spring Boot/Kotlin)"]
+    GW -.->|"/conta/*, /catalogo/*"| Mock["mock-backend<br>(httpbin)<br>stand-in for bff-conta<br>and bff-catalogo"]
+
+    BFF -->|"POST /payments<br>sync HTTP call"| Pay["payment-api<br>(Spring Boot/Kotlin)"]
+    BFF --> BFFStore[("Orders<br>in-memory")]
+    Pay --> PayStore[("Payments<br>in-memory,<br>fake APPROVED/DECLINED")]
+```
+
+No queue, no worker, no Postgres, no Redis yet — `payment-api` decides
+approve/decline immediately and synchronously (see "Known
+simplifications" in each service's README). This is Phase 2 of the
+roadmap.
+
+### Target state (roadmap)
+
+Where this is headed: async payment processing via outbox + queue +
+worker + cache, Postgres as the source of truth, and the real KMP app
+instead of curl/Postman.
+
+```mermaid
+flowchart LR
+    Client["KMP App<br>(Compose Multiplatform<br>Android + iOS)"] --> GW["API Gateway<br>(KrakenD)<br>routing, auth, rate limit, TLS"]
+    GW --> BFF["BFF Checkout"]
+    GW -.-> OtherBFF["Other BFFs<br>(Account, Catalog)"]
+    BFF --> Catalog["Product Catalog"]
+    BFF --> PayAPI["Payment API"]
+    PayAPI --> DB[("Postgres DB<br>(source of truth)")]
+    PayAPI -- outbox --> Queue[["Queue<br>(RabbitMQ)"]]
+    Queue --> Worker["Worker"]
+    Worker --> DB
+    Worker --> Cache[("Redis Cache<br>(read status)")]
+    BFF -- reads status --> Cache
+    Client -- "opens My Orders screen" --> GW
+```
+
+Gaps between current and target state, roughly in build order:
+
+- Health checks in `docker-compose.yml` so `depends_on` actually waits
+  for the app to be ready, not just the container to start.
+- Real `bff-conta` (and possibly `bff-catalogo`), replacing
+  `mock-backend`.
+- Phase 3: RabbitMQ queue + Worker + Redis cache, replacing the
+  synchronous fake decision in `payment-api`.
+- Phase 4: Postgres as the source of truth + outbox pattern + DLQ +
+  end-to-end idempotency.
+- Phase 5 (stretch goal): push notification when a payment finishes
+  processing.
 
 ## What this repo covers right now
 
@@ -150,7 +209,7 @@ somewhere real, set `SPRING_PROFILES_ACTIVE=prod` on that environment.
 
 ## Next steps (roadmap)
 
-See the "5. Build Roadmap" page in Notion. Phase 4 adds Postgres,
+See the "Target state (roadmap)" diagram above. Phase 4 adds Postgres,
 outbox pattern, the RabbitMQ queue, the worker, and idempotency/DLQ
 hardening — `payment-api` and `bff-checkout` currently only cover
 Phase 2 (synchronous, in-memory, fake decision).
