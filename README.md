@@ -1,4 +1,4 @@
-# iStore Gateway
+# iStore Back-end
 
 Architecture exercise "Checkout KMP + BFF": API Gateway + Checkout
 backend. Gateway is **KrakenD** (declarative config, no custom code);
