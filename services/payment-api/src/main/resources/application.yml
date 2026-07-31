@@ -1,0 +1,20 @@
+server:
+  port: 8090
+
+spring:
+  application:
+    name: payment-api
+
+# Swagger/OpenAPI is ON by default (local/dev). The "prod" profile
+# (application-prod.yml) turns it off. Activate it in real deployments
+# with SPRING_PROFILES_ACTIVE=prod.
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+
+logging:
+  level:
+    com.istore.paymentapi: INFO

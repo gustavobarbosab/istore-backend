@@ -1,0 +1,7 @@
+# Activate with SPRING_PROFILES_ACTIVE=prod. Turns Swagger/OpenAPI off —
+# don't expose API docs / try-it-out UI in production.
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

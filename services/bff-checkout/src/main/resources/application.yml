@@ -1,0 +1,24 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: bff-checkout
+
+payment-api:
+  # Overridden by the PAYMENT_API_BASE_URL env var in docker-compose.yml.
+  base-url: http://localhost:8090
+
+# Swagger/OpenAPI is ON by default (local/dev). The "prod" profile
+# (application-prod.yml) turns it off. Activate it in real deployments
+# with SPRING_PROFILES_ACTIVE=prod.
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+
+logging:
+  level:
+    com.istore.bffcheckout: INFO

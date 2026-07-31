@@ -1,0 +1,40 @@
+services:
+  # Stand-in for BFF Conta / BFF Catalogo, which still don't exist.
+  # Just echoes back the request, useful to validate that the Gateway is
+  # routing and proxying correctly. Swap it for the real service
+  # (bff-conta, bff-catalogo) once it exists — just point the "host" of
+  # each endpoint in krakend.json to the right service.
+  mock-backend:
+    image: kennethreitz/httpbin
+    container_name: mock-backend
+    ports:
+      - "8082:80"
+
+  payment-api:
+    build: ./services/payment-api
+    container_name: payment-api
+    ports:
+      - "8090:8090"
+
+  bff-checkout:
+    build: ./services/bff-checkout
+    container_name: bff-checkout
+    environment:
+      PAYMENT_API_BASE_URL: "http://payment-api:8090"
+    ports:
+      - "8081:8081"
+    depends_on:
+      - payment-api
+
+  gateway:
+    image: krakend:2.9
+    container_name: istore-gateway
+    command: ["run", "-d", "-c", "/etc/krakend/krakend.json"]
+    volumes:
+      - ./gateway/krakend.json:/etc/krakend/krakend.json:ro
+      - ./gateway/jwk:/etc/krakend/jwk:ro
+    ports:
+      - "8080:8080"
+    depends_on:
+      - bff-checkout
+      - mock-backend

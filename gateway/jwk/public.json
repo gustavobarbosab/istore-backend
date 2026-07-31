@@ -1,0 +1,12 @@
+{
+  "keys": [
+    {
+      "kty": "RSA",
+      "kid": "gateway-local-dev-1",
+      "use": "sig",
+      "alg": "RS256",
+      "n": "qTVl5yloJ6up_5wkL-nTG0bxuWV1BlQ7_3KSW1KnnnWK5uDjpksi084KcMgqgZnCLGYooQPz9LBmctNGLz0yf03h5Du5PmNxBimNU2V1q4RDv6WogVDkF2qzmUrk6fav5LUD3f4EgeIdTTvtZCmtZWC5wGQ1jE4Vz9P9yEBlVlCJ89pq0OVdEaeFj5TpKelDxsp2Y7jhNdzkDvFl2whx2BO71XpxEMQTiNDTAXdpNpkbqOeYt7cpJjXtibARZaVCGgitDLfl86TIzbUOIvWFNNhSkkKtiEL8olKEdlBIAs6sf8i70IiQlqvoPGUdKsqV4EvITDIS39I6NLfzmO53Pw",
+      "e": "AQAB"
+    }
+  ]
+}
